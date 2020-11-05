@@ -14,6 +14,7 @@ func NewRouter() *gin.Engine {
 
 	r.POST("/buy/:id", stock.Buy)
 	r.POST("/buywithpesslock/:id", stock.BuyWithPessimisticLock)
+	r.POST("/buywithoptlock/:id", stock.BuyWithOptimisticLock)
 
 	return r
 }

@@ -54,3 +54,23 @@ func (s Stock) BuyWithPessimisticLock(c *gin.Context) {
 	response.ToResponse(stockOrder)
 	return
 }
+
+func (s Stock) BuyWithOptimisticLock(c *gin.Context) {
+	param := service.BuyRequest{ID: convert.StrTo(c.Param("id")).MustInt32()}
+	response := app.NewResponse(c)
+
+	svc := service.New(c.Request.Context())
+	stockOrder, err := svc.BuyWithOptimisticLock(&param)
+	if err != nil {
+		log.Printf("BuyWithOptimisticLock||err:%v", err)
+		switch err.(type) {
+		case *errcode.Error:
+			response.ToErrorResponse(err.(*errcode.Error))
+		default:
+			response.ToErrorResponse(errcode.ErrorBuyStock)
+		}
+		return
+	}
+	response.ToResponse(stockOrder)
+	return
+}

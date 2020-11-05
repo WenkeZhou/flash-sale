@@ -26,3 +26,8 @@ func (d *Dao) BuyWithPessimisticLock(id uint32) (*model.StockOrder, error) {
 	stock := model.Stock{ID: id}
 	return stock.BuyWithPessimisticLock3(d.engine)
 }
+
+func (d *Dao) BuyWithOptimisticLock(id uint32) (*model.StockOrder, error) {
+	stock := model.Stock{ID: id}
+	return stock.BuyWithOptimisticLock(d.engine)
+}

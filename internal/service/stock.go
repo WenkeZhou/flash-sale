@@ -51,6 +51,17 @@ func (svc *Service) Buy(param *BuyRequest) (*StockOrder, error) {
 	}, nil
 }
 
+func (svc *Service) saleStock(id uint32, sale uint32) error {
+	err := svc.dao.UpdateStock(&dao.Stock{
+		ID:   id,
+		Sale: sale + 1,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // 悲观锁购买
 func (svc *Service) BuyWithPessimisticLock(param *BuyRequest) (*StockOrder, error) {
 	stockOrder, err := svc.dao.BuyWithPessimisticLock(param.ID)
@@ -66,13 +77,18 @@ func (svc *Service) BuyWithPessimisticLock(param *BuyRequest) (*StockOrder, erro
 	}, nil
 }
 
-func (svc *Service) saleStock(id uint32, sale uint32) error {
-	err := svc.dao.UpdateStock(&dao.Stock{
-		ID:   id,
-		Sale: sale + 1,
-	})
+// 乐观锁购买
+
+func (svc *Service) BuyWithOptimisticLock(param *BuyRequest) (*StockOrder, error) {
+	stockOrder, err := svc.dao.BuyWithOptimisticLock(param.ID)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &StockOrder{
+		ID:         stockOrder.ID,
+		Sid:        stockOrder.Sid,
+		Name:       stockOrder.Name,
+		CreateTime: stockOrder.CreateTime,
+	}, nil
 }
