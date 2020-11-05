@@ -22,9 +22,9 @@ func NewDBEngine(databaseSetting *setting.DataBaseSettingS) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	sqlDB, err := db.DB()
-	sqlDB.SetMaxIdleConns(databaseSetting.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(databaseSetting.MaxOpenConns)
+	//sqlDB, err := db.DB()
+	//sqlDB.SetMaxIdleConns(databaseSetting.MaxIdleConns)
+	//sqlDB.SetMaxOpenConns(databaseSetting.MaxOpenConns)
 
 	return db, nil
 }

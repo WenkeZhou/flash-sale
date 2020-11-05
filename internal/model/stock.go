@@ -211,7 +211,7 @@ func (s Stock) BuyWithOptimisticLock(db *gorm.DB) (*StockOrder, error) {
 	result := tx.Model(Stock{}).Where(map[string]interface{}{"id": stock.ID, "version": stock.Version}).Updates(updateValues)
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return nil, errcode.SellOutStock
+		return nil, errcode.ErrorOptimisticLock
 	}
 
 	stockOrder = StockOrder{Sid: stock.ID, Name: stock.Name, CreateTime: time.Now().Unix()}
