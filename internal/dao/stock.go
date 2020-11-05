@@ -21,3 +21,8 @@ func (d *Dao) UpdateStock(param *Stock) error {
 	values["sale"] = param.Sale
 	return stock.Update(d.engine, values)
 }
+
+func (d *Dao) BuyWithPessimisticLock(id uint32) (*model.StockOrder, error) {
+	stock := model.Stock{ID: id}
+	return stock.BuyWithPessimisticLock2(d.engine)
+}

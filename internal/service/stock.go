@@ -19,6 +19,7 @@ type Stock struct {
 	Version uint32 `json:"version"`
 }
 
+// 不做任何限制
 func (svc *Service) Buy(param *BuyRequest) (*StockOrder, error) {
 	stock, err := svc.dao.GetStock(param.ID)
 	if err != nil {
@@ -50,12 +51,20 @@ func (svc *Service) Buy(param *BuyRequest) (*StockOrder, error) {
 	}, nil
 }
 
-//func (svc *Service) checkStock(stock Stock) bool {
-//	if stock.Sale == stock.Count {
-//		return false
-//	}
-//	return true
-//}
+// 悲观锁购买
+func (svc *Service) BuyWithPessimisticLock(param *BuyRequest) (*StockOrder, error) {
+	stockOrder, err := svc.dao.BuyWithPessimisticLock(param.ID)
+
+	if err != nil {
+		return nil, err
+	}
+	return &StockOrder{
+		ID:         stockOrder.ID,
+		Sid:        stockOrder.Sid,
+		Name:       stockOrder.Name,
+		CreateTime: stockOrder.CreateTime,
+	}, nil
+}
 
 func (svc *Service) saleStock(id uint32, sale uint32) error {
 	err := svc.dao.UpdateStock(&dao.Stock{

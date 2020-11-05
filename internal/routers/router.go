@@ -13,6 +13,7 @@ func NewRouter() *gin.Engine {
 	stock := api.NewStock()
 
 	r.POST("/buy/:id", stock.Buy)
+	r.POST("/buywithpesslock/:id", stock.BuyWithPessimisticLock)
 
 	return r
 }
