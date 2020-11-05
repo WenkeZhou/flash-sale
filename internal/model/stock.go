@@ -155,10 +155,15 @@ func (s Stock) BuyWithPessimisticLock3(db *gorm.DB) (*StockOrder, error) {
 	var stock Stock
 	var stockOrder StockOrder
 
+	tx.First(&stock, s.ID)
+	if stock.Sale == stock.Count {
+		tx.Rollback()
+		return nil, errcode.SellOutStock
+	}
+
 	// 查询库存
 	result := tx.Model(Stock{}).Where("id = ? AND sale < count ", s.ID).Update("sale", gorm.Expr("sale + ?", 1))
 	if result.RowsAffected > 0 {
-		tx.First(&stock, s.ID)
 		stockOrder = StockOrder{Sid: stock.ID, Name: stock.Name, CreateTime: time.Now().Unix()}
 		//创建订单
 		err := tx.Create(&stockOrder).Error
@@ -168,7 +173,7 @@ func (s Stock) BuyWithPessimisticLock3(db *gorm.DB) (*StockOrder, error) {
 		}
 	} else {
 		tx.Rollback()
-		return nil, errcode.ErrorBuyStock
+		return nil, errcode.ErrorPessimisticLock
 	}
 
 	tx.Commit()
