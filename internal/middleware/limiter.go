@@ -15,7 +15,10 @@ func RateLimiter(l limiter.LimiterIface) gin.HandlerFunc {
 			if count == 0 {
 				response := app.NewResponse(c)
 				response.ToErrorResponse(errcode.ErrorTooManyRequest)
+				c.Abort()
+				return
 			}
 		}
+		c.Next()
 	}
 }

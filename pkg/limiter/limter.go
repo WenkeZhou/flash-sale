@@ -9,11 +9,11 @@ import (
 type LimiterIface interface {
 	Key(c *gin.Context) string
 	GetBucket(key string) (*ratelimit.Bucket, bool)
-	AddBuckets(rules ...LimiterBucketRule) LimiterIface
+	AddBucket(rules ...LimiterBucketRule) LimiterIface
 }
 
 type Limiter struct {
-	limiterBuckets map[string]*ratelimit.Bucket
+	LimiterBuckets map[string]*ratelimit.Bucket
 }
 
 type LimiterBucketRule struct {

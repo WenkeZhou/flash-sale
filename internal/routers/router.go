@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-var methodLimiters = limiter.NewMethodLimiter().AddBuckets(limiter.LimiterBucketRule{
-	Key:          "/buywithoptlocklimiter",
-	FillInterval: time.Millisecond * 100,
+var methodLimiters = limiter.NewMethodLimiter().AddBucket(limiter.LimiterBucketRule{
+	Key:          "/buywithoptlocklimiter/1",
+	FillInterval: time.Millisecond * 200,
 	Capacity:     10,
 	Quantum:      10,
 })

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/WenkeZhou/flash-sale/pkg/errcode"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -26,18 +27,21 @@ func (r *Response) ToResponse(data interface{}) {
 	if data == nil {
 		data = gin.H{}
 	}
+	fmt.Printf("StatusCode:%v, Data: %v \n", http.StatusOK, data)
 	r.Ctx.JSON(http.StatusOK, data)
 }
 
 func (r *Response) ToResponseList(list interface{}, totalRows int) {
-	r.Ctx.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"list": list,
 		"pager": Pager{
 			Page:      GetPage(r.Ctx),
 			PageSize:  GetPageSize(r.Ctx),
 			TotalRows: totalRows,
 		},
-	})
+	}
+	fmt.Printf("StatusCode:%v, Data: %v \n", http.StatusOK, response)
+	r.Ctx.JSON(http.StatusOK, response)
 }
 
 func (r *Response) ToErrorResponse(err *errcode.Error) {
@@ -47,5 +51,6 @@ func (r *Response) ToErrorResponse(err *errcode.Error) {
 		response["details"] = details
 	}
 
+	fmt.Printf("StatusCode:%v, Data: %v \n", err.StatusCode(), response)
 	r.Ctx.JSON(err.StatusCode(), response)
 }

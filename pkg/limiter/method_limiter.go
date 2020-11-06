@@ -10,33 +10,31 @@ type MethodLimiter struct {
 	*Limiter
 }
 
-func NewMethodLimiter() LimiterIface {
-	return MethodLimiter{
-		Limiter: &Limiter{
-			limiterBuckets: make(map[string]*ratelimit.Bucket),
-		},
-	}
-}
-
-func (l MethodLimiter) Key(c *gin.Context) string {
-	uri := c.Request.RequestURI
-	index := strings.Index(uri, "?")
+func (m MethodLimiter) Key(c *gin.Context) string {
+	url := c.Request.RequestURI
+	index := strings.Index(url, "?")
 	if index == -1 {
-		return uri
+		return url
 	}
-	return uri[:index]
+	return url[:index]
 }
 
-func (l MethodLimiter) GetBucket(key string) (*ratelimit.Bucket, bool) {
-	bucket, ok := l.limiterBuckets[key]
+func (m MethodLimiter) GetBucket(key string) (*ratelimit.Bucket, bool) {
+	bucket, ok := m.LimiterBuckets[key]
 	return bucket, ok
 }
 
-func (l MethodLimiter) AddBuckets(rules ...LimiterBucketRule) LimiterIface {
+func (m MethodLimiter) AddBucket(rules ...LimiterBucketRule) LimiterIface {
 	for _, rule := range rules {
-		if _, ok := l.limiterBuckets[rule.Key]; !ok {
-			l.limiterBuckets[rule.Key] = ratelimit.NewBucketWithQuantum(rule.FillInterval, rule.Capacity, rule.Quantum)
+		if _, ok := m.LimiterBuckets[rule.Key]; !ok {
+			m.LimiterBuckets[rule.Key] = ratelimit.NewBucketWithQuantum(rule.FillInterval, rule.Capacity, rule.Quantum)
 		}
 	}
-	return l
+	return m
+}
+
+func NewMethodLimiter() LimiterIface {
+	return MethodLimiter{
+		Limiter: &Limiter{LimiterBuckets: make(map[string]*ratelimit.Bucket)},
+	}
 }

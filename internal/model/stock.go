@@ -187,7 +187,8 @@ func (s Stock) BuyWithOptimisticLock(db *gorm.DB) (*StockOrder, error) {
 	var stockOrder StockOrder
 
 	// 查询库存
-	err := tx.Set("gorm:query_option", "FOR UPDATE").Where("id = ? ", s.ID).First(&stock).Error
+	//err := tx.Set("gorm:query_option", "FOR UPDATE").Where("id = ? ", s.ID).First(&stock).Error
+	err := tx.First(&stock, s.ID).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		tx.Rollback()
 		return nil, err
