@@ -15,11 +15,19 @@ var methodLimiters = limiter.NewMethodLimiter().AddBucket(limiter.LimiterBucketR
 	Quantum:      10,
 })
 
+var fullPathLimiters = limiter.NewFullPathLimiter().AddBucket(limiter.LimiterBucketRule{
+	Key:          "/buywithoptlocklimiter/:id",
+	FillInterval: time.Second * 5,
+	Capacity:     10,
+	Quantum:      10,
+})
+
 func NewRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
-	r.Use(middleware.RateLimiter(methodLimiters))
+	//r.Use(middleware.RateLimiter(methodLimiters))
+	r.Use(middleware.RateLimiter(fullPathLimiters))
 
 	stock := api.NewStock()
 
@@ -27,6 +35,7 @@ func NewRouter() *gin.Engine {
 	r.POST("/buywithpesslock/:id", stock.BuyWithPessimisticLock)
 	r.POST("/buywithoptlock/:id", stock.BuyWithOptimisticLock)
 	r.POST("/buywithoptlocklimiter/:id", stock.BuyWithOptimisticLock)
-
+	r.GET("/getverifyhash/stock/:sid/user/:userid", stock.GetVerifyHash)
+	r.POST("/buymd5/stock/:sid/user/:userid/verifyhash/:verifyhash", stock.BuyMd5)
 	return r
 }

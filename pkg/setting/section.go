@@ -34,6 +34,22 @@ type DataBaseSettingS struct {
 	MaxOpenConns int
 }
 
+type RedisSettingS struct {
+	Address     string
+	Password    string
+	LinkType    string
+	MaxIdle     int
+	MaxActive   int
+	IdleTimeout time.Duration
+}
+
+type VerifySettingS struct {
+	VerifySalt           string
+	UserHashKeyPrefix    string
+	UserVisitCountPrefix string
+	MaxUserBuyCount      int
+}
+
 //type JWTSettingS struct {
 //	Secret string
 //	Issuer string

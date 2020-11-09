@@ -4,8 +4,8 @@ import (
 	"github.com/WenkeZhou/flash-sale/global"
 	"github.com/WenkeZhou/flash-sale/internal/model"
 	"github.com/WenkeZhou/flash-sale/internal/routers"
+	"github.com/WenkeZhou/flash-sale/pkg/gredis"
 	"github.com/WenkeZhou/flash-sale/pkg/setting"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"time"
@@ -21,6 +21,12 @@ func init() {
 	if err != nil {
 		log.Fatalf("init setupDBEngine err: %v", err)
 	}
+
+	err = setupRedisConn()
+	if err != nil {
+		log.Fatalf("init setupRedisConn err: %v", err)
+	}
+
 }
 
 func setupSetting() error {
@@ -44,8 +50,19 @@ func setupSetting() error {
 		return err
 	}
 
+	err = s.ReadSection("RedisDatabase", &global.RedisSetting)
+	if err != nil {
+		return err
+	}
+
+	err = s.ReadSection("VerifyData", &global.VerifySetting)
+	if err != nil {
+		return err
+	}
+
 	global.ServerSetting.ReadTimeout *= time.Second
 	global.ServerSetting.WriteTimeout *= time.Second
+	global.RedisSetting.IdleTimeout *= time.Second
 
 	return nil
 }
@@ -59,8 +76,17 @@ func setupDBEngine() error {
 	return nil
 }
 
+func setupRedisConn() error {
+	var err error
+	global.RedisConn, err = gredis.InitRedisConn(global.RedisSetting)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
-	gin.SetMode("debug")
+	//gin.SetMode("debug")
 	router := routers.NewRouter()
 
 	s := &http.Server{

@@ -7,10 +7,24 @@ Server:
 Database:
   DBType: mysql
   Username: root
-  Password: test
+  Password: himrhero
   Host: 127.0.0.1:3306
   DBName: flash_sale_db
   CharSet: utf8
   ParseTime: True
   MaxIdleConns: 10
   MaxOpenConns: 30
+
+RedisDatabase:
+  Address: 127.0.0.1:6379
+  Password: ""
+  LinkType: "tcp"
+  MaxIdle: 30
+  MaxActive: 30
+  IdleTimeout: 100
+
+VerifyData:
+  VerifySalt: 1)2(*&<f3afS8>]\@#4*&^
+  UserHashKeyPrefix: user_hash_key
+  UserVisitCountPrefix: user_visit_count
+  MaxUserBuyCount: 10

@@ -10,4 +10,6 @@ var (
 	ServerSetting   *setting.ServerSettings
 	AppSetting      *setting.AppSettingS
 	DatabaseSetting *setting.DataBaseSettingS
+	RedisSetting    *setting.RedisSettingS
+	VerifySetting   *setting.VerifySettingS
 )

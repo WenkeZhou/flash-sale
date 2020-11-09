@@ -226,3 +226,50 @@ func (s Stock) BuyWithOptimisticLock(db *gorm.DB) (*StockOrder, error) {
 	tx.Commit()
 	return &stockOrder, nil
 }
+
+func (s Stock) BuyWithUser(db *gorm.DB, userId uint32) (*UserStockOrder, error) {
+	tx := db.Begin()
+	var stock Stock
+	var userStockOrder UserStockOrder
+
+	// 查询库存
+	//err := tx.Set("gorm:query_option", "FOR UPDATE").Where("id = ? ", s.ID).First(&stock).Error
+	err := tx.First(&stock, s.ID).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err == gorm.ErrRecordNotFound {
+		tx.Rollback()
+		return nil, errcode.NotFoundStock
+	}
+
+	// 判断库存
+	if stock.Sale == stock.Count {
+		tx.Rollback()
+		return nil, errcode.SellOutStock
+	}
+
+	updateValues := map[string]interface{}{
+		"sale":    stock.Sale + 1,    //扣除库存
+		"version": stock.Version + 1, // 乐观锁递增
+	}
+	result := tx.Model(Stock{}).Where(map[string]interface{}{"id": stock.ID, "version": stock.Version}).Updates(updateValues)
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, errcode.ErrorOptimisticLock
+	}
+
+	userStockOrder = UserStockOrder{Sid: stock.ID, UserId: userId, Name: stock.Name, CreateTime: time.Now().Unix()}
+
+	//创建订单
+	err = tx.Create(&userStockOrder).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+	return &userStockOrder, nil
+}
