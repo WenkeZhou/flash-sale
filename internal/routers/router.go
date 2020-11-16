@@ -37,5 +37,12 @@ func NewRouter() *gin.Engine {
 	r.POST("/buywithoptlocklimiter/:id", stock.BuyWithOptimisticLock)
 	r.GET("/getverifyhash/stock/:sid/user/:userid", stock.GetVerifyHash)
 	r.POST("/buymd5/stock/:sid/user/:userid/verifyhash/:verifyhash", stock.BuyMd5)
+	r.GET("/getstockbydb/:sid", stock.GetStockByDB)
+	r.GET("/getstockbycache/:sid", stock.GetStockByCache)
+
+	r.POST("/buywithcachev1/:id", stock.BuyWithCacheV1)
+	r.POST("/buywithcachev2/:id", stock.BuyWithCacheV2)
+	r.POST("/buywithcachev3/:id", stock.BuyWithCacheV3)
+
 	return r
 }

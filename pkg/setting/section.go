@@ -50,6 +50,10 @@ type VerifySettingS struct {
 	MaxUserBuyCount      int
 }
 
+type BusinessSettingS struct {
+	StockCachePrefix string
+}
+
 //type JWTSettingS struct {
 //	Secret string
 //	Issuer string

@@ -3,6 +3,7 @@ package gredis
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/WenkeZhou/flash-sale/pkg/errcode"
 	"github.com/WenkeZhou/flash-sale/pkg/setting"
 	"github.com/gomodule/redigo/redis"
 	"time"
@@ -35,7 +36,7 @@ func InitRedisConn(rds *setting.RedisSettingS) (*redis.Pool, error) {
 	return RedisConn, nil
 }
 
-func SetString(RedisConn *redis.Pool, key string, data interface{}, time int) error {
+func SetCommon(RedisConn *redis.Pool, key string, data interface{}, time int) error {
 	conn := RedisConn.Get()
 	defer conn.Close()
 
@@ -48,7 +49,7 @@ func SetString(RedisConn *redis.Pool, key string, data interface{}, time int) er
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("Redis设置 key[%v], value[%v], expire[%v]\n", key, data, time)
 	return nil
 }
 
@@ -172,7 +173,7 @@ func GetInt(RedisConn *redis.Pool, key string) (int, error) {
 		if err.Error() != "redigo: nil returned" {
 			return reply, err
 		} else {
-			return 0, nil
+			return reply, errcode.NotFound
 		}
 	}
 	return reply, nil

@@ -12,4 +12,5 @@ var (
 	DatabaseSetting *setting.DataBaseSettingS
 	RedisSetting    *setting.RedisSettingS
 	VerifySetting   *setting.VerifySettingS
+	BusinessSetting *setting.BusinessSettingS
 )

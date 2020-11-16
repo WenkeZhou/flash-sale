@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/WenkeZhou/flash-sale/global"
+	"github.com/WenkeZhou/flash-sale/pkg/errcode"
 	"github.com/WenkeZhou/flash-sale/pkg/gredis"
 	"strconv"
 )
@@ -25,7 +26,10 @@ func (u *User) GetUserIsBanded() (bool, error) {
 	k := global.VerifySetting.UserVisitCountPrefix + strconv.Itoa(int(u.ID))
 	v, err := gredis.GetInt(global.RedisConn, k)
 	if err != nil {
-		return false, err
+		if err != errcode.NotFound {
+			return false, err
+		}
+		v = 0
 	}
 	if v > global.VerifySetting.MaxUserBuyCount {
 		return false, nil

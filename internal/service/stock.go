@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+type GetStock struct {
+	ID uint32 `form:"id" binding:"required,gte=1"`
+}
+
 type BuyRequest struct {
 	ID uint32 `form:"id" binding:"required,gte=1"`
 }
@@ -33,6 +37,11 @@ type Stock struct {
 	Count   uint32 `json:"count"`
 	Sale    uint32 `json:"sale"`
 	Version uint32 `json:"version"`
+}
+
+type StockStorage struct {
+	ID      uint32 `json:"id"`
+	Storage uint32 `json:"storage"`
 }
 
 // 不做任何限制
@@ -109,6 +118,97 @@ func (svc *Service) BuyWithOptimisticLock(param *BuyRequest) (*StockOrder, error
 	}, nil
 }
 
+func (svc *Service) BuyWithCacheV1(param *BuyRequest) (*StockOrder, error) {
+	// 删除库存缓存
+	if err := svc.DeleteStockStorageCache(param.ID); err != nil {
+		return nil, err
+	}
+
+	// 完成扣库存 下单
+	stockOrder, err := svc.dao.BuyWithOptimisticLock(param.ID)
+
+	if err != nil {
+		return nil, err
+	}
+	return &StockOrder{
+		ID:         stockOrder.ID,
+		Sid:        stockOrder.Sid,
+		Name:       stockOrder.Name,
+		CreateTime: stockOrder.CreateTime,
+	}, nil
+}
+
+func (svc *Service) BuyWithCacheV2(param *BuyRequest) (*StockOrder, error) {
+	// 删除库存缓存
+	if err := svc.DeleteStockStorageCache(param.ID); err != nil {
+		return nil, err
+	}
+
+	// 完成扣库存 下单
+	stockOrder, err := svc.dao.BuyWithOptimisticLock(param.ID)
+
+	if err != nil {
+		return nil, err
+	}
+	return &StockOrder{
+		ID:         stockOrder.ID,
+		Sid:        stockOrder.Sid,
+		Name:       stockOrder.Name,
+		CreateTime: stockOrder.CreateTime,
+	}, nil
+}
+
+func (svc *Service) DeleteStockStorageCache(sid uint32) error {
+	key := global.BusinessSetting.StockCachePrefix + strconv.Itoa(int(sid))
+	_, err := gredis.Delete(global.RedisConn, key)
+	if err != nil {
+		return err
+	} else {
+		fmt.Println("DeleteStockStorageCache||sid=", sid)
+	}
+	return nil
+}
+
+func (svc *Service) BuyWithCacheV3(param *BuyRequest) (*StockOrder, error) {
+	// 完成扣库存 下单
+	stockOrder, err := svc.dao.BuyWithOptimisticLock(param.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 删除库存缓存
+	if err = svc.DeleteStockStorageCache(param.ID); err != nil {
+		return nil, err
+	}
+
+	go svc.DelayDeleteStockStorageCache(param.ID, 200)
+
+	return &StockOrder{
+		ID:         stockOrder.ID,
+		Sid:        stockOrder.Sid,
+		Name:       stockOrder.Name,
+		CreateTime: stockOrder.CreateTime,
+	}, nil
+}
+
+func (svc *Service) DelayDeleteStockStorageCache(sid uint32, st int) {
+	// sid 是商品 id
+	// st 是延迟时间，单位毫秒
+	ticker := time.Tick(time.Duration(st) * time.Millisecond)
+	for {
+		select {
+		case <-ticker:
+			// 删除库存缓存
+			err := svc.DeleteStockStorageCache(sid)
+			if err != nil {
+				fmt.Println("DelayDeleteStockStorageCache||err:", err)
+			}
+			return
+		}
+	}
+}
+
 func (svc *Service) GetVerifyHash(param *GetVerifyHashRequest) (string, error) {
 	sId := param.SID
 	userId := param.UserID
@@ -129,7 +229,7 @@ func (svc *Service) GetVerifyHash(param *GetVerifyHashRequest) (string, error) {
 	verify := global.VerifySetting.VerifySalt + string(user.ID) + string(stock.ID)
 	verifyHash := util.EncodeMD5(verify)
 	tmpKey := global.VerifySetting.UserHashKeyPrefix + "_" + strconv.Itoa(int(user.ID)) + "_" + strconv.Itoa(int(stock.ID))
-	err = gredis.SetString(
+	err = gredis.SetCommon(
 		global.RedisConn,
 		tmpKey,
 		verifyHash,
@@ -192,5 +292,44 @@ func (svc *Service) BuyMd5(param *UserByRequest) (*StockOrder, error) {
 		Sid:        stockOrder.Sid,
 		Name:       stockOrder.Name,
 		CreateTime: stockOrder.CreateTime,
+	}, nil
+}
+
+func (svc *Service) GetStockByDB(param *GetStock) (*StockStorage, error) {
+	stock, err := svc.dao.GetStock(param.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StockStorage{
+		ID:      stock.ID,
+		Storage: stock.Count - stock.Sale,
+	}, nil
+}
+
+func (svc *Service) GetStockByCache(param *GetStock) (*StockStorage, error) {
+	k := global.BusinessSetting.StockCachePrefix + strconv.Itoa(int(param.ID))
+	storage, err := gredis.GetInt(global.RedisConn, k)
+	var count int
+	if err != nil {
+		if err != errcode.NotFound {
+			return nil, err
+		}
+		stock, err := svc.dao.GetStock(param.ID)
+		if err != nil {
+			return nil, err
+		}
+		if err = gredis.SetCommon(global.RedisConn, k, stock.Count-stock.Sale, 60*2); err != nil {
+			return nil, err
+		}
+		count = int(stock.Count - stock.Sale)
+	} else {
+		count = storage
+		fmt.Println("从 Redis cache 中获取缓存, storage:", storage)
+	}
+
+	return &StockStorage{
+		ID:      param.ID,
+		Storage: uint32(count),
 	}, nil
 }

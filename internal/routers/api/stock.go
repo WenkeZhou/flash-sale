@@ -121,3 +121,107 @@ func (s Stock) BuyMd5(c *gin.Context) {
 	response.ToResponse(stockOrder)
 	return
 }
+
+func (s Stock) GetStockByDB(c *gin.Context) {
+	param := service.GetStock{
+		ID: convert.StrTo(c.Param("sid")).MustInt32(),
+	}
+	response := app.NewResponse(c)
+
+	svc := service.New(c.Request.Context())
+	stock, err := svc.GetStockByDB(&param)
+	if err != nil {
+		log.Printf("GetStockByDB||err:%v", err)
+		switch err.(type) {
+		case *errcode.Error:
+			response.ToErrorResponse(err.(*errcode.Error))
+		default:
+			response.ToErrorResponse(errcode.ErrorBuyStock)
+		}
+		return
+	}
+	response.ToResponse(stock)
+	return
+}
+
+func (s Stock) GetStockByCache(c *gin.Context) {
+	param := service.GetStock{
+		ID: convert.StrTo(c.Param("sid")).MustInt32(),
+	}
+	response := app.NewResponse(c)
+
+	svc := service.New(c.Request.Context())
+	stock, err := svc.GetStockByCache(&param)
+	if err != nil {
+		log.Printf("GetStockByCache||err:%v", err)
+		switch err.(type) {
+		case *errcode.Error:
+			response.ToErrorResponse(err.(*errcode.Error))
+		default:
+			response.ToErrorResponse(errcode.ErrorBuyStock)
+		}
+		return
+	}
+	response.ToResponse(stock)
+	return
+}
+
+func (s Stock) BuyWithCacheV1(c *gin.Context) {
+	param := service.BuyRequest{ID: convert.StrTo(c.Param("id")).MustInt32()}
+	response := app.NewResponse(c)
+
+	svc := service.New(c.Request.Context())
+	stockOrder, err := svc.BuyWithCacheV1(&param)
+	if err != nil {
+		log.Printf("BuyWithCacheV1||err:%v", err)
+		switch err.(type) {
+		case *errcode.Error:
+			response.ToErrorResponse(err.(*errcode.Error))
+		default:
+			response.ToErrorResponse(errcode.ErrorBuyStock)
+		}
+		return
+	}
+	response.ToResponse(stockOrder)
+	return
+}
+
+func (s Stock) BuyWithCacheV2(c *gin.Context) {
+	param := service.BuyRequest{ID: convert.StrTo(c.Param("id")).MustInt32()}
+	response := app.NewResponse(c)
+
+	svc := service.New(c.Request.Context())
+	stockOrder, err := svc.BuyWithCacheV2(&param)
+	if err != nil {
+		log.Printf("BuyWithCacheV2||err:%v", err)
+		switch err.(type) {
+		case *errcode.Error:
+			response.ToErrorResponse(err.(*errcode.Error))
+		default:
+			response.ToErrorResponse(errcode.ErrorBuyStock)
+		}
+		return
+	}
+	response.ToResponse(stockOrder)
+	return
+}
+
+func (s Stock) BuyWithCacheV3(c *gin.Context) {
+	param := service.BuyRequest{ID: convert.StrTo(c.Param("id")).MustInt32()}
+	response := app.NewResponse(c)
+
+	svc := service.New(c.Request.Context())
+	stockOrder, err := svc.BuyWithCacheV3(&param)
+	if err != nil {
+		log.Printf("BuyWithCacheV3||err:%v", err)
+		switch err.(type) {
+		case *errcode.Error:
+			response.ToErrorResponse(err.(*errcode.Error))
+		default:
+			response.ToErrorResponse(errcode.ErrorBuyStock)
+		}
+		return
+	}
+	response.ToResponse(stockOrder)
+	return
+}
